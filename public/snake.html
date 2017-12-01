@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Let's Play</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Bootstrap -->
+    <link href="css/mdb.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body class="yellow">
+    <hr>
+<header>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark yellow smooth-scroll fixed-top" style="margin-bottom: ">
+        <div class="container">
+            <a class="navbar-brand blue-text" href="./index.html">Lets' Play</a>
+            <button class="navbar-toggler red" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto smooth-scroll">
+                    <li class="nav-item">
+                        <a class="nav-link blue-text" href="#top">Home</a>
+                    </li>
+                    <li class="nav-item">
+                            <a class="nav-link blue-text" href="snake.html">Snake Game</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link blue-text" href="ngSnake.html">ngSnake Game</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link blue-text" href="#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<main>
+    
+    <div class="container yellow">
+        <hr class="my-5">
+        <div class="row">
+                <div class="col-sm-1"></div>
+                <div class="col-lg-6" style="padding-bottom: 50px;">
+                    <canvas id="gameCanvas" width="400" height="400"></canvas>
+                </div>
+                <div class="col-lg-5 white" style="max-height: 300px; overflow-y: scroll;" id="data">
+                                  <ul class="pages">
+    <li class="chat page">
+      <div class="chatArea">
+        <ul class="messages"></ul>
+      </div>
+      <input class="inputMessage" placeholder="Type here..."/>
+    </li>
+    <li class="login page">
+      <div class="form">
+        <h3 class="title">What's your nickname?</h3>
+        <input class="usernameInput" type="text" maxlength="14" />
+      </div>
+    </li>
+  </ul>
+
+  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/main.js"></script>
+                </div>
+            </div>
+        
+        </div>
+    <hr>
+</main>
+<!-- Main Bulk --> 
+    <!-- /Main Bulk -->
+
+    <!-- SCRIPTS -->
+    <!-- JQuery -->
+    <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+    <!-- Bootstrap tooltips -->
+    <script type="text/javascript" src="js/popper.min.js"></script>
+    <!-- Bootstrap core JavaScript -->
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <!-- MDB core JavaScript -->
+    <script type="text/javascript" src="js/mdb.min.js"></script>
+    <script>
+    window.setInterval(function() {
+    var elem = document.getElementById('data');
+        elem.scrollTop = elem.scrollHeight;
+    }, 1000);
+        
+    //get gameCanvas, set up context buffer, add keylistener and set game interval to 12 frames per second
+    window.onload = function() {
+        canv = document.getElementById("gameCanvas");
+        ctxBuffer = canv.getContext("2d");
+        document.addEventListener("keydown", keyPush);
+        setInterval(game,1000/12);
+    }
+    window.addEventListener("keydown", function(e) {
+    // space and arrow keys
+    if([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+    }
+}, false);
+    //defined snake variables
+    var playerX= 10;
+    var playerY = 10;
+    var gridSize = 20;
+    var tileCount = 20;
+    var appleX = 15;
+    var appleY = 15;
+    var xVelosity = 0;
+    var yVelosity = 0;
+    trail=[];
+    tail = 5;
+
+    function game () {
+        playerX += xVelosity;
+        playerY += yVelosity;
+        //if snake goes off screen will wrap back around. Game ends if touches self only
+        if(playerX<0){
+            playerX = tileCount-1;
+        }
+        if(playerX>tileCount-1){
+            playerX = 0;
+        }
+        if(playerY<0){
+            playerY = tileCount-1;
+        }
+        if(playerY>tileCount-1){
+            playerY = 0;
+        }
+        //fills playing board with black color
+        ctxBuffer.fillStyle="black";
+        ctxBuffer.fillRect(0,0, canv.width, canv.height);
+        
+        //colors snake and places it on board. Also determines if snake touches own body
+        ctxBuffer.fillStyle="lime";
+        for(var i=0; i<trail.length; i++){
+            ctxBuffer.fillRect(trail[i].x*gridSize, trail[i].y*gridSize, gridSize-2, gridSize-2);
+            if(trail[i].x == playerX && trail[i].y == playerY){
+                playerX=playerY=10;
+                gridSize=tileCount=20;
+                appleX=appleY=15;
+                xVelosity=yVelosity=0;
+                trail=[];
+                tail = 5;
+            }
+        }
+        //add to snake tail and use object literal to push new object onto array
+        trail.push({x:playerX,y:playerY});
+        //if tail somehow becomes too long. this function will cut off tail that way user doesnt gain tail without collecting the apple
+        while(trail.length> tail){
+            trail.shift();
+        }
+        //if apple is collected increase tail length. once collected apple is randomized to different location
+        if(appleX==playerX && appleY==playerY){
+            tail++;
+            appleX = Math.floor(Math.random()*tileCount);
+            appleY = Math.floor(Math.random()*tileCount);
+        }
+        //colors apple and places it on the board
+        ctxBuffer.fillStyle="red";
+        ctxBuffer.fillRect(appleX*gridSize, appleY*gridSize, gridSize-2, gridSize-2);
+    }
+    //switch on evt handler. Changes snakes velosity in key pressed direction.
+    function keyPush(evt) {
+        switch(evt.keyCode){
+            case 37:
+                xVelosity=-1;
+                yVelosity=0;
+                break;
+            case 38:
+                xVelosity=0;
+                yVelosity=-1;
+                break;
+            case 39:
+                xVelosity=1;
+                yVelosity=0;
+                break;
+            case 40:
+                xVelosity=0;
+                yVelosity=1;
+                break;
+        }
+    }
+</script>
+                
+<!--Footer-->
+<footer class="page-footer yellow center-on-small-only navbar-bottom" id="contact">
+
+    <!--Footer Links-->
+    <div class="container-fluid">
+        <div class="row">
+
+            <!--First column-->
+            <div class="col-md-6" style="min-height: 100px;">
+                <h5 class="title blue-text">Let's Play</h5>
+                <p class="blue-text">Thanks for joining us here at Let's play. We hope your stay was enjoyable.</p>
+            </div>
+            <!--/.First column-->
+
+            <!--Second column-->
+            <div class="col-md-6">
+                <h5 class="title blue-text">Links</h5>
+                <ul>
+                    <li><a class="blue-text" href="http://github.com/dduenow">Git Hub</a></li>
+                </ul>
+            </div>
+            <!--/.Second column-->
+        </div>
+    </div>
+    <!--/.Footer Links-->
+
+    <!--Copyright-->
+    <div class="footer-copyright">
+        <div class="container-fluid">
+            © 2015 Copyright: <a href="http://davidduenow.com" class="blue-text"> davidduenow.com </a>
+
+        </div>
+    </div>
+    <!--/.Copyright-->
+
+</footer>
+<!--/.Footer-->
+                
+</body>
+</html>
