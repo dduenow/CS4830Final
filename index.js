@@ -1,3 +1,6 @@
+//source https://github.com/socketio/socket.io/tree/master/examples/chat
+//modified https://github.com/dduenow
+
 // Setup basic express server
 var express = require('express');
 var app = express();

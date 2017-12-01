@@ -1,5 +1,5 @@
 //source https://github.com/zackargyle/ngSnake
-//modified by https://github.com.dduenow
+//modified by https://github.com/dduenow
 
 angular.module('ngSnake', [])
 
